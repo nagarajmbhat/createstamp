@@ -662,7 +662,8 @@
     <div class="header-sample-select">
       <label for="sample-select" style="font-size: 12px; color: var(--text-muted); font-weight: 600; white-space: nowrap;">Sample Template:</label>
       <select id="sample-select" style="width: auto; padding: 5px 10px; font-size: 12px;">
-        <option value="honavar-coop" selected>★ Honavar Co-op Society (Single Bottom Star, Natural Kerning)</option>
+        <option value="honavar-coop" selected>★ Honavar Co-op Society (350° Full-Circle)</option>
+        <option value="coop-split">Honavar Society (Split: Top & Bottom Arcs)</option>
         <option value="college-attested">M.P.E. SDM College (Attested Box)</option>
         <option value="canara-jeeni">Canara Jeeni Health Mix (Multi-Line Inverted)</option>
         <option value="gold-appraiser">Ganesh P. Shet (Gold Appraiser Box)</option>
@@ -696,7 +697,7 @@
     <aside class="studio-sidebar" id="studio-sidebar">
       <div class="sidebar-header">
         <h2>Configure Stamp Seal</h2>
-        <span style="font-size: 11px; color: var(--primary);">Natural Kerning Mode</span>
+        <span style="font-size: 11px; color: var(--primary);">2 Layout Modes</span>
       </div>
 
       <div class="sidebar-content">
@@ -758,7 +759,7 @@
           </select>
         </div>
 
-        <!-- Typography & Font Controls Panel (User Choice) -->
+        <!-- Typography & Font Controls Panel -->
         <div class="typography-box">
           <div class="typography-box-header">
             <span>Typography & Geometry Controls</span>
@@ -776,7 +777,16 @@
             </select>
           </div>
 
-          <!-- Round: Single Bottom Star Symbol -->
+          <!-- Circular Mode Toggle: Full-Circle Wrap vs Split Two Arcs -->
+          <div class="form-group" id="circle-mode-group">
+            <label class="form-label">Circular Text Layout Mode</label>
+            <select id="select-circle-mode">
+              <option value="full-circle" selected>350° Full-Circle Wrap (1 Sentence + Bottom Star)</option>
+              <option value="split-arcs">Split Two Arcs (Top Sentence & Bottom Sentence)</option>
+            </select>
+          </div>
+
+          <!-- Full-Circle Mode: Bottom Star Symbol -->
           <div class="form-group" id="bottom-star-group">
             <label class="form-label">Bottom Center Symbol (6 o'clock)</label>
             <select id="select-bottom-star">
@@ -784,6 +794,17 @@
               <option value="★">★ (Solid Star Emblem)</option>
               <option value="•">• (Centered Bullet Dot)</option>
               <option value="none">None (No Bottom Symbol)</option>
+            </select>
+          </div>
+
+          <!-- Split Arcs Mode: Side Separator Symbols -->
+          <div class="form-group" id="side-star-group" style="display: none;">
+            <label class="form-label">Side Separators (9 & 3 o'clock)</label>
+            <select id="select-side-star">
+              <option value="★" selected>★ (Solid Stars on Left & Right)</option>
+              <option value="*">* (Asterisks on Left & Right)</option>
+              <option value="•">• (Bullet Dots on Left & Right)</option>
+              <option value="none">None (No Side Separators)</option>
             </select>
           </div>
 
@@ -798,7 +819,7 @@
             </div>
           </div>
 
-          <!-- Letter Spacing Slider (Fixes uneven gaps) -->
+          <!-- Letter Spacing Slider -->
           <div class="form-group" id="letter-spacing-group">
             <label class="form-label">
               <span>Letter Spacing (Kerning)</span>
@@ -832,7 +853,7 @@
           </div>
         </div>
 
-        <!-- Dynamic Text Inputs (Swapped based on shape) -->
+        <!-- Dynamic Text Inputs (Swapped based on shape & circle mode) -->
         <div class="dynamic-fields" id="dynamic-fields">
           <!-- Injected via JavaScript based on shape -->
         </div>
@@ -966,7 +987,7 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
         ]
       };
 
-      // State Object with Natural Kerning & Single Star Support
+      // State Object with Both Circular Modes & Natural Kerning
       const state = {
         shape: 'round',
         sizeKey: 'md',
@@ -974,15 +995,19 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
         backing: 'square',
         border: 'single',
         fontFamilyKey: 'kannada-sans',
-        bottomStar: '*',       // Single star centered at 6 o'clock
+        circleMode: 'full-circle', // 'full-circle' | 'split-arcs'
+        bottomStar: '*',           // Single star at 6 o'clock in full-circle mode
+        sideStar: '★',             // Left & right stars in split-arcs mode
         outerFontSize: 15.5,
-        letterSpacing: 0.5,    // Natural tight kerning
+        letterSpacing: 0.5,        // Natural kerning
         centerFontSize: 13.0,
         lineSpacing: 1.35,
         logoDataUrl: null,
         // Round Values
         round: {
           circularText: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ',
+          topArc: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ.',
+          bottomArc: 'ತಾ|| ಹೊನ್ನಾವರ (ಉ.ಕ.)',
           centerMulti: 'ತಾ||\nಹೊನ್ನಾವರ (ಉ.ಕ.)\nReg. No.\nAR/20/CRSR/\n41614/2018-19'
         },
         // Rectangle Values
@@ -1003,6 +1028,7 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
           backing: 'square',
           border: 'single',
           fontFamilyKey: 'kannada-sans',
+          circleMode: 'full-circle',
           bottomStar: '*',
           outerFontSize: 15.5,
           letterSpacing: 0.5,
@@ -1010,7 +1036,29 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
           lineSpacing: 1.35,
           round: {
             circularText: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ',
+            topArc: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ.',
+            bottomArc: 'ತಾ|| ಹೊನ್ನಾವರ (ಉ.ಕ.)',
             centerMulti: 'ತಾ||\nಹೊನ್ನಾವರ (ಉ.ಕ.)\nReg. No.\nAR/20/CRSR/\n41614/2018-19'
+          }
+        },
+        'coop-split': {
+          shape: 'round',
+          sizeKey: 'md',
+          theme: 'white-on-black',
+          backing: 'square',
+          border: 'single',
+          fontFamilyKey: 'kannada-sans',
+          circleMode: 'split-arcs',
+          sideStar: '★',
+          outerFontSize: 14.5,
+          letterSpacing: 0.5,
+          centerFontSize: 13.0,
+          lineSpacing: 1.35,
+          round: {
+            circularText: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ',
+            topArc: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ.',
+            bottomArc: 'ತಾ|| ಹೊನ್ನಾವರ (ಉ.ಕ.)',
+            centerMulti: 'ಉಪ್ಪೋಣಿ\nReg. No.\nAR/20/CRSR/\n41614/2018-19'
           }
         },
         'college-attested': {
@@ -1085,8 +1133,12 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
 
       // Typography Controls DOM
       const selectFontFamily = document.getElementById('select-font-family');
+      const circleModeGroup = document.getElementById('circle-mode-group');
+      const selectCircleMode = document.getElementById('select-circle-mode');
       const bottomStarGroup = document.getElementById('bottom-star-group');
       const selectBottomStar = document.getElementById('select-bottom-star');
+      const sideStarGroup = document.getElementById('side-star-group');
+      const selectSideStar = document.getElementById('select-side-star');
       const outerFontGroup = document.getElementById('outer-font-group');
       const letterSpacingGroup = document.getElementById('letter-spacing-group');
       const sliderLetterSpacing = document.getElementById('slider-letter-spacing');
@@ -1156,28 +1208,67 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
         dynamicFieldsContainer.innerHTML = '';
 
         if (state.shape === 'round') {
-          bottomStarGroup.style.display = 'flex';
+          circleModeGroup.style.display = 'flex';
           outerFontGroup.style.display = 'flex';
           letterSpacingGroup.style.display = 'flex';
           centerFontLabel.textContent = 'Center Text Font Size';
 
-          dynamicFieldsContainer.innerHTML = `
-            <div class="form-group">
-              <label class="form-label">Circular Outer Text <span class="hint">Natural Kerning</span></label>
-              <input type="text" id="input-circular-text" value="${escapeHtml(state.round.circularText)}" placeholder="e.g. ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ" />
-            </div>
+          if (state.circleMode === 'full-circle') {
+            bottomStarGroup.style.display = 'flex';
+            sideStarGroup.style.display = 'none';
 
-            <div class="form-group">
-              <label class="form-label">Center Content (Multi-Line) <span class="hint">Press Enter for new line</span></label>
-              <textarea id="input-round-center" rows="5" placeholder="Line 1\nLine 2\nLine 3...">${escapeHtml(state.round.centerMulti)}</textarea>
-            </div>
-          `;
+            dynamicFieldsContainer.innerHTML = `
+              <div class="form-group">
+                <label class="form-label">Full Circular Text <span class="hint">Continuous Wrap</span></label>
+                <input type="text" id="input-circular-text" value="${escapeHtml(state.round.circularText)}" placeholder="e.g. ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ" />
+              </div>
 
-          document.getElementById('input-circular-text').addEventListener('input', e => { 
-            state.round.circularText = e.target.value; 
-            markCustomSample();
-            renderAll(); 
-          });
+              <div class="form-group">
+                <label class="form-label">Center Content (Multi-Line) <span class="hint">Press Enter for new line</span></label>
+                <textarea id="input-round-center" rows="5" placeholder="Line 1\nLine 2\nLine 3...">${escapeHtml(state.round.centerMulti)}</textarea>
+              </div>
+            `;
+
+            document.getElementById('input-circular-text').addEventListener('input', e => { 
+              state.round.circularText = e.target.value; 
+              markCustomSample();
+              renderAll(); 
+            });
+
+          } else {
+            // Split Two Arcs Mode (Top Sentence & Bottom Sentence)
+            bottomStarGroup.style.display = 'none';
+            sideStarGroup.style.display = 'flex';
+
+            dynamicFieldsContainer.innerHTML = `
+              <div class="form-group">
+                <label class="form-label">Top Arc Text (Above) <span class="hint">Upper Half Curve</span></label>
+                <input type="text" id="input-top-arc" value="${escapeHtml(state.round.topArc)}" placeholder="e.g. ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ." />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Bottom Arc Text (Below) <span class="hint">Lower Half Curve</span></label>
+                <input type="text" id="input-bottom-arc" value="${escapeHtml(state.round.bottomArc)}" placeholder="e.g. ತಾ|| ಹೊನ್ನಾವರ (ಉ.ಕ.)" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Center Content (Multi-Line) <span class="hint">Press Enter for new line</span></label>
+                <textarea id="input-round-center" rows="5" placeholder="Line 1\nLine 2\nLine 3...">${escapeHtml(state.round.centerMulti)}</textarea>
+              </div>
+            `;
+
+            document.getElementById('input-top-arc').addEventListener('input', e => { 
+              state.round.topArc = e.target.value; 
+              markCustomSample();
+              renderAll(); 
+            });
+
+            document.getElementById('input-bottom-arc').addEventListener('input', e => { 
+              state.round.bottomArc = e.target.value; 
+              markCustomSample();
+              renderAll(); 
+            });
+          }
 
           document.getElementById('input-round-center').addEventListener('input', e => { 
             state.round.centerMulti = e.target.value; 
@@ -1186,7 +1277,10 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
           });
 
         } else {
+          // Rectangle mode
+          circleModeGroup.style.display = 'none';
           bottomStarGroup.style.display = 'none';
+          sideStarGroup.style.display = 'none';
           outerFontGroup.style.display = 'none';
           letterSpacingGroup.style.display = 'none';
           centerFontLabel.textContent = 'Rectangle Text Font Size';
@@ -1235,6 +1329,7 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
           state.centerFontSize = 13.0;
           state.lineSpacing = 1.35;
           state.bottomStar = '*';
+          state.sideStar = '★';
 
           sliderOuterFont.value = state.outerFontSize;
           valOuterFont.textContent = state.outerFontSize.toFixed(1) + 'px';
@@ -1245,6 +1340,7 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
           sliderLineSpacing.value = state.lineSpacing;
           valLineSpacing.textContent = state.lineSpacing.toFixed(2) + 'x';
           selectBottomStar.value = '*';
+          selectSideStar.value = '★';
         } else {
           state.rectangle.fontSize = 13.0;
           state.rectangle.lineSpacing = 1.35;
@@ -1259,7 +1355,7 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
 
       btnAutoFit.addEventListener('click', resetDefaults);
 
-      // 4. Mathematical SVG Seal Generator (Natural Kerning + Single Bottom Star)
+      // 4. Mathematical SVG Seal Generator (Supports Both Full-Circle & Split-Arcs)
       function generateSealSVG(targetWidth, targetHeight) {
         const isWhiteOnBlack = state.theme === 'white-on-black';
         const inkColor = isWhiteOnBlack ? '#ffffff' : '#000000';
@@ -1299,87 +1395,189 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
               <circle cx="${cx}" cy="${cy}" r="${innerR}" fill="none" stroke="${inkColor}" stroke-width="2" stroke-dasharray="3 3" />
             `;
           } else {
-            // Clean single border as in real-world Honavar photo
+            // Clean single border
             borderMarkup = `
               <circle cx="${cx}" cy="${cy}" r="${outerR}" fill="none" stroke="${inkColor}" stroke-width="4.5" />
               <circle cx="${cx}" cy="${cy}" r="${innerR}" fill="none" stroke="${inkColor}" stroke-width="2" />
             `;
           }
 
-          // 1. Single Bottom Star Placement (Exact 6 o'clock Center: x=150, y=150+120=270)
-          let bottomStarMarkup = '';
-          if (state.bottomStar && state.bottomStar !== 'none') {
-            const starFontSize = Math.max(16, state.outerFontSize + 2);
-            bottomStarMarkup = `
-              <text 
-                x="${cx}" 
-                y="${cy + bandR}" 
-                fill="${inkColor}" 
-                font-family="${fontFamily}" 
-                font-size="${starFontSize}" 
-                font-weight="800" 
-                text-anchor="middle" 
-                dominant-baseline="central"
-              >${state.bottomStar}</text>
-            `;
-          }
-
-          // 2. Natural Kerning Circular Text Engine
-          // Tokenize string into indivisible orthographic syllables
-          const cleanText = (state.round.circularText || '').trim();
-          const tokens = tokenizeIndicString(cleanText);
-
           let circularTextMarkup = '';
-          if (tokens.length > 0) {
-            // Measure actual pixel width of each syllable + user letter-spacing
-            const tokenAdvances = tokens.map(t => {
-              const naturalWidth = getTokenAdvance(t, state.outerFontSize, fontFamily);
-              return naturalWidth + state.letterSpacing;
-            });
+          let decorSymbolsMarkup = '';
 
-            const totalTextWidth = tokenAdvances.reduce((a, b) => a + b, 0);
-
-            // Compute total angular span along the circle
-            // Angle in degrees = (width / radius) * (180 / PI)
-            let totalAngleSpan = (totalTextWidth / bandR) * (180 / Math.PI);
-
-            // Maximum allowed span so text doesn't collide with the bottom star at 180°
-            const maxSpan = state.bottomStar !== 'none' ? 336 : 352;
-            let scaleFactor = 1.0;
-            if (totalAngleSpan > maxSpan) {
-              scaleFactor = maxSpan / totalAngleSpan;
-              totalAngleSpan = maxSpan;
-            }
-
-            // Symmetrically center text across 12 o'clock apex (0°)
-            // Left end starts at -totalAngleSpan/2, Right end finishes at +totalAngleSpan/2
-            const startAngle = -totalAngleSpan / 2;
-
-            let currentWidthAccum = 0;
-            tokens.forEach((token, idx) => {
-              const advance = tokenAdvances[idx] * scaleFactor;
-              const angle = startAngle + ((currentWidthAccum + advance / 2) / (totalTextWidth * scaleFactor)) * totalAngleSpan;
-              currentWidthAccum += advance;
-
-              if (token.trim().length === 0) return; // space contributes to position without drawing
-
-              circularTextMarkup += `
+          if (state.circleMode === 'full-circle') {
+            // -------------------------------------------------------------
+            // MODE 1: 350° Full-Circle Wrap with Single Bottom Star
+            // -------------------------------------------------------------
+            if (state.bottomStar && state.bottomStar !== 'none') {
+              const starFontSize = Math.max(16, state.outerFontSize + 2);
+              decorSymbolsMarkup = `
                 <text 
                   x="${cx}" 
-                  y="${cy - bandR}" 
-                  transform="rotate(${angle.toFixed(2)}, ${cx}, ${cy})" 
+                  y="${cy + bandR}" 
                   fill="${inkColor}" 
                   font-family="${fontFamily}" 
-                  font-size="${state.outerFontSize}" 
-                  font-weight="700" 
+                  font-size="${starFontSize}" 
+                  font-weight="800" 
                   text-anchor="middle" 
                   dominant-baseline="central"
-                >${escapeHtml(token)}</text>
+                >${state.bottomStar}</text>
               `;
-            });
+            }
+
+            const cleanText = (state.round.circularText || '').trim();
+            const tokens = tokenizeIndicString(cleanText);
+
+            if (tokens.length > 0) {
+              const tokenAdvances = tokens.map(t => {
+                const naturalWidth = getTokenAdvance(t, state.outerFontSize, fontFamily);
+                return naturalWidth + state.letterSpacing;
+              });
+
+              const totalTextWidth = tokenAdvances.reduce((a, b) => a + b, 0);
+              let totalAngleSpan = (totalTextWidth / bandR) * (180 / Math.PI);
+
+              const maxSpan = state.bottomStar !== 'none' ? 336 : 352;
+              let scaleFactor = 1.0;
+              if (totalAngleSpan > maxSpan) {
+                scaleFactor = maxSpan / totalAngleSpan;
+                totalAngleSpan = maxSpan;
+              }
+
+              const startAngle = -totalAngleSpan / 2;
+              let currentWidthAccum = 0;
+
+              tokens.forEach((token, idx) => {
+                const advance = tokenAdvances[idx] * scaleFactor;
+                const angle = startAngle + ((currentWidthAccum + advance / 2) / (totalTextWidth * scaleFactor)) * totalAngleSpan;
+                currentWidthAccum += advance;
+
+                if (token.trim().length === 0) return;
+
+                circularTextMarkup += `
+                  <text 
+                    x="${cx}" 
+                    y="${cy - bandR}" 
+                    transform="rotate(${angle.toFixed(2)}, ${cx}, ${cy})" 
+                    fill="${inkColor}" 
+                    font-family="${fontFamily}" 
+                    font-size="${state.outerFontSize}" 
+                    font-weight="700" 
+                    text-anchor="middle" 
+                    dominant-baseline="central"
+                  >${escapeHtml(token)}</text>
+                `;
+              });
+            }
+
+          } else {
+            // -------------------------------------------------------------
+            // MODE 2: Split Two Arcs (Top Sentence & Bottom Sentence)
+            // -------------------------------------------------------------
+            
+            // Side Separator Symbols (at 9 o'clock x=150-120=30, and 3 o'clock x=150+120=270)
+            if (state.sideStar && state.sideStar !== 'none') {
+              const sideStarFontSize = Math.max(14, state.outerFontSize);
+              decorSymbolsMarkup = `
+                <text x="${cx - bandR}" y="${cy}" fill="${inkColor}" font-family="${fontFamily}" font-size="${sideStarFontSize}" font-weight="800" text-anchor="middle" dominant-baseline="central">${state.sideStar}</text>
+                <text x="${cx + bandR}" y="${cy}" fill="${inkColor}" font-family="${fontFamily}" font-size="${sideStarFontSize}" font-weight="800" text-anchor="middle" dominant-baseline="central">${state.sideStar}</text>
+              `;
+            }
+
+            // Top Arc Text (Above)
+            const topClean = (state.round.topArc || '').trim();
+            const topTokens = tokenizeIndicString(topClean);
+
+            if (topTokens.length > 0) {
+              const topAdvances = topTokens.map(t => {
+                return getTokenAdvance(t, state.outerFontSize, fontFamily) + state.letterSpacing;
+              });
+              const topTotalWidth = topAdvances.reduce((a, b) => a + b, 0);
+              let topAngleSpan = (topTotalWidth / bandR) * (180 / Math.PI);
+
+              // Limit top arc to stay within upper semicircle
+              const maxTopSpan = (state.sideStar !== 'none') ? 148 : 165;
+              let topScale = 1.0;
+              if (topAngleSpan > maxTopSpan) {
+                topScale = maxTopSpan / topAngleSpan;
+                topAngleSpan = maxTopSpan;
+              }
+
+              const topStartAngle = -topAngleSpan / 2;
+              let topAccum = 0;
+
+              topTokens.forEach((token, idx) => {
+                const adv = topAdvances[idx] * topScale;
+                const angle = topStartAngle + ((topAccum + adv / 2) / (topTotalWidth * topScale)) * topAngleSpan;
+                topAccum += adv;
+
+                if (token.trim().length === 0) return;
+
+                circularTextMarkup += `
+                  <text 
+                    x="${cx}" 
+                    y="${cy - bandR}" 
+                    transform="rotate(${angle.toFixed(2)}, ${cx}, ${cy})" 
+                    fill="${inkColor}" 
+                    font-family="${fontFamily}" 
+                    font-size="${state.outerFontSize}" 
+                    font-weight="700" 
+                    text-anchor="middle" 
+                    dominant-baseline="central"
+                  >${escapeHtml(token)}</text>
+                `;
+              });
+            }
+
+            // Bottom Arc Text (Below) - Swept Right-Side Up from Left to Right
+            const btmClean = (state.round.bottomArc || '').trim();
+            const btmTokens = tokenizeIndicString(btmClean);
+
+            if (btmTokens.length > 0) {
+              const btmAdvances = btmTokens.map(t => {
+                return getTokenAdvance(t, state.outerFontSize, fontFamily) + state.letterSpacing;
+              });
+              const btmTotalWidth = btmAdvances.reduce((a, b) => a + b, 0);
+              let btmAngleSpan = (btmTotalWidth / bandR) * (180 / Math.PI);
+
+              const maxBtmSpan = (state.sideStar !== 'none') ? 148 : 165;
+              let btmScale = 1.0;
+              if (btmAngleSpan > maxBtmSpan) {
+                btmScale = maxBtmSpan / btmAngleSpan;
+                btmAngleSpan = maxBtmSpan;
+              }
+
+              // At (cx, cy + bandR), alpha rotates from +halfSpan (left) to -halfSpan (right)
+              // so glyphs read left-to-right right-side-up
+              const btmHalfSpan = btmAngleSpan / 2;
+              let btmAccum = 0;
+
+              btmTokens.forEach((token, idx) => {
+                const adv = btmAdvances[idx] * btmScale;
+                // Move from left (+btmHalfSpan) to right (-btmHalfSpan)
+                const alpha = btmHalfSpan - ((btmAccum + adv / 2) / (btmTotalWidth * btmScale)) * btmAngleSpan;
+                btmAccum += adv;
+
+                if (token.trim().length === 0) return;
+
+                circularTextMarkup += `
+                  <text 
+                    x="${cx}" 
+                    y="${cy + bandR}" 
+                    transform="rotate(${alpha.toFixed(2)}, ${cx}, ${cy})" 
+                    fill="${inkColor}" 
+                    font-family="${fontFamily}" 
+                    font-size="${state.outerFontSize}" 
+                    font-weight="700" 
+                    text-anchor="middle" 
+                    dominant-baseline="central"
+                  >${escapeHtml(token)}</text>
+                `;
+              });
+            }
           }
 
-          // 3. Center Multi-Line Calculations with User Sliders
+          // Center Multi-Line Calculations with User Sliders
           const rawLines = (state.round.centerMulti || '').split('\n');
           const lines = rawLines.map(l => l.trim()).filter(l => l.length > 0);
           const lineCount = Math.max(1, lines.length);
@@ -1414,13 +1612,13 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
               ${baseFillMarkup}
               ${borderMarkup}
 
-              <!-- Circular Text (Naturally Kerned, Zero Dotted Circles) -->
+              <!-- Circular Text (Naturally Kerned) -->
               <g class="circular-ring-text">
                 ${circularTextMarkup}
               </g>
 
-              <!-- Single Bottom Star Centered at 6 o'clock -->
-              ${bottomStarMarkup}
+              <!-- Symbols & Separators -->
+              ${decorSymbolsMarkup}
 
               ${logoMarkup}
 
@@ -1585,8 +1783,18 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
         }
 
         if (tpl.shape === 'round') {
-          state.bottomStar = tpl.bottomStar || '*';
-          selectBottomStar.value = state.bottomStar;
+          if (tpl.circleMode) {
+            state.circleMode = tpl.circleMode;
+            selectCircleMode.value = tpl.circleMode;
+          }
+          if (tpl.bottomStar) {
+            state.bottomStar = tpl.bottomStar;
+            selectBottomStar.value = tpl.bottomStar;
+          }
+          if (tpl.sideStar) {
+            state.sideStar = tpl.sideStar;
+            selectSideStar.value = tpl.sideStar;
+          }
 
           state.outerFontSize = tpl.outerFontSize;
           state.letterSpacing = tpl.letterSpacing || 0.5;
@@ -1604,6 +1812,8 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
 
           if (tpl.round) {
             state.round.circularText = tpl.round.circularText;
+            state.round.topArc = tpl.round.topArc;
+            state.round.bottomArc = tpl.round.bottomArc;
             state.round.centerMulti = tpl.round.centerMulti;
           }
         } else {
@@ -1707,9 +1917,24 @@ The authorized stamp and seal affixed below confirms formal registry accession. 
         renderAll();
       });
 
+      // Circular Layout Mode Toggle (Full-Circle vs Split-Arcs)
+      selectCircleMode.addEventListener('change', e => {
+        state.circleMode = e.target.value;
+        buildDynamicFields();
+        markCustomSample();
+        renderAll();
+      });
+
       // Bottom Star selector
       selectBottomStar.addEventListener('change', e => {
         state.bottomStar = e.target.value;
+        markCustomSample();
+        renderAll();
+      });
+
+      // Side Star selector
+      selectSideStar.addEventListener('change', e => {
+        state.sideStar = e.target.value;
         markCustomSample();
         renderAll();
       });
