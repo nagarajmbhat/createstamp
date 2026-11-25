@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stamp Studio & A3 Layout Previewer</title>
+  <style>
+    /* CSS Variables & Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-app: #090d16;
+      --bg-studio: #131b2e;
+      --bg-card: #1a243b;
+      --border-color: #273654;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --success-hover: #059669;
+      --paper-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Bar */
+    .app-header {
+      flex-shrink: 0;
+      background-color: var(--bg-studio);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      z-index: 100;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .badge-a3 {
+      background: #0284c7;
+      color: #e0f2fe;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-sample-select {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      background-color: #273654;
+      border: 1px solid #3b4e75;
+      border-radius: 6px;
+      padding: 7px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background-color: #33466d;
+      border-color: #4f6799;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: #0f172a;
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #ffffff;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      border-color: var(--success);
+      color: #ffffff;
+    }
+    .btn-success:hover {
+      background-color: var(--success-hover);
+      border-color: var(--success-hover);
+    }
+
+    .mobile-tab-btn {
+      display: none;
+    }
+
+    /* Main Split Layout */
+    .app-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Left Studio Sidebar */
+    .studio-sidebar {
+      width: 440px;
+      flex-shrink: 0;
+      background-color: var(--bg-studio);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 20;
+    }
+
+    .sidebar-header {
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sidebar-header h2 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .sidebar-content {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Live Stamp Thumbnail Card */
+    .preview-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* Stamp Stage with subtle checker pattern */
+    .stamp-stage {
+      width: 220px;
+      height: 220px;
+      background-color: #f8fafc;
+      background-image: 
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.08);
+      padding: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stamp-stage svg {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* Form Controls */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-label span.hint {
+      font-size: 11px;
+      color: var(--primary);
+      text-transform: none;
+      font-weight: 400;
+    }
+
+    .form-label span.val-badge {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    select, input[type="text"], input[type="file"], textarea {
+      width: 100%;
+      font-family: 'Noto Sans Kannada', 'Kannada Sangam MN', 'Nirmala UI', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      color: var(--text-main);
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 85px;
+      line-height: 1.5;
+    }
+
+    select:focus, input[type="text"]:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* Slider Row */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: #273654;
+      outline: none;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    /* Binary Color Theme Segmented Control */
+    .theme-segmented-control {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .theme-option-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .theme-option-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .theme-option-btn.active {
+      background: #273654;
+      border-color: #3b4e75;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .theme-pill-preview {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid #64748b;
+      display: inline-block;
+    }
+
+    .pill-bow {
+      background: #000000;
+      border-color: #ffffff;
+    }
+
+    .pill-wob {
+      background: #ffffff;
+      border-color: #000000;
+    }
+
+    /* Typography Settings Box */
+    .typography-box {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(26, 36, 59, 0.65);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .typography-box-header {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Dynamic Inputs Container */
+    .dynamic-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: rgba(26, 36, 59, 0.45);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    /* Stamp Actions Group */
+    .studio-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .stamp-buttons-row {
+      display: flex;
+      gap: 8px;
+    }
+    .stamp-buttons-row .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    /* Canvas / Preview Area */
+    .canvas-viewport {
+      flex: 1;
+      overflow: auto;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background: radial-gradient(circle at 50% 50%, #152033 0%, #090d16 100%);
+      position: relative;
+    }
+
+    /* Paper Scaler Envelope */
+    .paper-scaler {
+      position: relative;
+      flex-shrink: 0;
+      margin: 0 auto;
+    }
+
+    /* Fixed A3 Virtual Paper Sheet (1123px x 1587px at 96 DPI) */
+    .paper-a3 {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 1123px;
+      height: 1587px;
+      margin-left: -561.5px;
+      background: #ffffff;
+      color: #1e293b;
+      box-shadow: var(--paper-shadow);
+      display: flex;
+      flex-direction: column;
+      transform-origin: top center;
+      box-sizing: border-box;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    /* Document Structure inside A3 */
+    .doc-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 60px 75px;
+      font-family: "Georgia", "Times New Roman", serif;
+      line-height: 1.6;
+      background: #ffffff;
+    }
+
+    .doc-header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .doc-header h1 {
+      font-size: 26pt;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    .doc-header .doc-meta {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 11pt;
+      color: #64748b;
+      text-align: right;
+    }
+
+    /* Editable Document Content */
+    .doc-body {
+      flex: 1;
+      outline: none;
+      font-size: 13pt;
+      color: #334155;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      cursor: text;
+    }
+
+    /* Footer & Seal Target Zone */
+    .doc-footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 30px;
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .signatory-box {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 11pt;
+      color: #475569;
+    }
+
+    .signatory-line {
+      width: 220px;
+      border-bottom: 1px solid #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    /* Stamped Seal Area on A3 Paper */
+    .doc-seal-zone {
+      min-width: 260px;
+      min-height: 200px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      background: rgba(248, 250, 252, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .doc-seal-zone:hover {
+      border-color: #94a3b8;
+    }
+
+    .seal-zone-placeholder {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* Placed Seal SVG Container */
+    .placed-seal-container {
+      display: none;
+      position: relative;
+      user-select: none;
+    }
+
+    .placed-seal-container svg {
+      display: block;
+    }
+
+    /* Scale Status Chip */
+    .scale-indicator {
+      position: fixed;
+      bottom: 18px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border-color);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 880px) {
+      .app-header {
+        padding: 8px 12px;
+      }
+      .mobile-tab-btn {
+        display: inline-flex;
+      }
+      .studio-sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-width: 440px;
+        transform: translateX(0);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 10px 0 25px rgba(0, 0, 0, 0.5);
+      }
+      .studio-sidebar.collapsed {
+        transform: translateX(-100%);
+      }
+      .canvas-viewport {
+        padding: 12px;
+      }
+    }
+
+    /* Print Styles: A3 Sheet Physical Output */
+    @media print {
+      @page {
+        size: A3 portrait;
+        margin: 0;
+      }
+
+      body {
+        background: transparent !important;
+        overflow: visible !important;
+      }
+
+      .app-header, .studio-sidebar, .scale-indicator, .seal-zone-placeholder {
+        display: none !important;
+      }
+
+      .app-body, .canvas-viewport {
+        display: block !important;
+        padding: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
+      }
+
+      .paper-scaler {
+        width: 1123px !important;
+        height: 1587px !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+
+      .paper-a3 {
+        position: static !important;
+        width: 1123px !important;
+        height: 1587px !important;
+        margin: 0 !important;
+        transform: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+      }
+
+      .doc-seal-zone {
+        border: none !important;
+        background: transparent !important;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Navigation -->
+  <header class="app-header">
+    <div class="brand-title">
+      <button class="btn mobile-tab-btn" id="toggle-sidebar-btn" title="Toggle Studio Menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <span>Stamp Studio</span>
+      <span class="badge-a3">A3 Sheet</span>
+    </div>
+
+    <!-- Quick Load Sample Templates -->
+    <div class="header-sample-select">
+      <label for="sample-select" style="font-size: 12px; color: var(--text-muted); font-weight: 600; white-space: nowrap;">Sample Template:</label>
+      <select id="sample-select" style="width: auto; padding: 5px 10px; font-size: 12px;">
+        <option value="honavar-coop" selected>★ Honavar Co-op Society (Single Bottom Star, Natural Kerning)</option>
+        <option value="college-attested">M.P.E. SDM College (Attested Box)</option>
+        <option value="canara-jeeni">Canara Jeeni Health Mix (Multi-Line Inverted)</option>
+        <option value="gold-appraiser">Ganesh P. Shet (Gold Appraiser Box)</option>
+        <option value="custom">-- Custom / User Edited --</option>
+      </select>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn" id="reset-doc-btn" title="Reset A3 document to default template">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>
+        </svg>
+        Reset Doc
+      </button>
+
+      <button class="btn btn-primary" id="print-a3-btn" title="Print physical A3 or Save as PDF">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"/>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+          <rect x="6" y="14" width="12" height="8"/>
+        </svg>
+        Print A3 Sheet
+      </button>
+    </div>
+  </header>
+
+  <!-- App Workspace -->
+  <div class="app-body">
+
+    <!-- Left Parametric Studio Sidebar -->
+    <aside class="studio-sidebar" id="studio-sidebar">
+      <div class="sidebar-header">
+        <h2>Configure Stamp Seal</h2>
+        <span style="font-size: 11px; color: var(--primary);">Natural Kerning Mode</span>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Live Vector Micro Preview Card -->
+        <div class="preview-card">
+          <div class="stamp-stage" id="stamp-stage">
+            <!-- Dynamic SVG injected here -->
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: ui-monospace, monospace;" id="stamp-dim-label">42mm (160px)</span>
+        </div>
+
+        <!-- Shape & Size Controls -->
+        <div class="form-group">
+          <label class="form-label">Seal Shape</label>
+          <select id="seal-shape">
+            <option value="round" selected>Round (Circular)</option>
+            <option value="rectangle">Rectangle</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Physical Size</label>
+          <select id="seal-size">
+            <!-- Populated dynamically based on shape -->
+          </select>
+        </div>
+
+        <!-- Binary Color Theme: Black on White vs White on Black -->
+        <div class="form-group">
+          <label class="form-label">Stamp Color Scheme</label>
+          <div class="theme-segmented-control" id="theme-controls">
+            <button type="button" class="theme-option-btn" data-theme="black-on-white">
+              <span class="theme-pill-preview pill-bow"></span>
+              Black on White
+            </button>
+            <button type="button" class="theme-option-btn active" data-theme="white-on-black">
+              <span class="theme-pill-preview pill-wob"></span>
+              White on Black
+            </button>
+          </div>
+        </div>
+
+        <!-- Backing Style for White on Black (Square Block vs Circle) -->
+        <div class="form-group" id="backing-group">
+          <label class="form-label">Inverted Backing Shape</label>
+          <select id="seal-backing">
+            <option value="square" selected>Square Black Block (As in Photo)</option>
+            <option value="circle">Circular Cutout</option>
+          </select>
+        </div>
+
+        <!-- Border Style -->
+        <div class="form-group">
+          <label class="form-label">Border Style</label>
+          <select id="seal-border">
+            <option value="single" selected>Single Clean Ring / Box</option>
+            <option value="double">Double Ring / Frame</option>
+            <option value="dotted">Inner Dotted Ring</option>
+          </select>
+        </div>
+
+        <!-- Typography & Font Controls Panel (User Choice) -->
+        <div class="typography-box">
+          <div class="typography-box-header">
+            <span>Typography & Geometry Controls</span>
+            <button type="button" class="btn" id="btn-auto-fit" style="padding: 2px 8px; font-size: 11px;">Reset Defaults</button>
+          </div>
+
+          <!-- Font Family Selector -->
+          <div class="form-group">
+            <label class="form-label">Font Family</label>
+            <select id="select-font-family">
+              <option value="kannada-sans" selected>Kannada Modern Sans (Noto Sans / System)</option>
+              <option value="kannada-serif">Kannada Traditional Serif (Sangam MN / Nirmala)</option>
+              <option value="english-sans">English Bold Sans (Arial / Helvetica)</option>
+              <option value="english-serif">Classic Serif (Times / Georgia)</option>
+            </select>
+          </div>
+
+          <!-- Round: Single Bottom Star Symbol -->
+          <div class="form-group" id="bottom-star-group">
+            <label class="form-label">Bottom Center Symbol (6 o'clock)</label>
+            <select id="select-bottom-star">
+              <option value="*" selected>* (Standard Asterisk Star)</option>
+              <option value="★">★ (Solid Star Emblem)</option>
+              <option value="•">• (Centered Bullet Dot)</option>
+              <option value="none">None (No Bottom Symbol)</option>
+            </select>
+          </div>
+
+          <!-- Outer / Primary Font Size Slider -->
+          <div class="form-group" id="outer-font-group">
+            <label class="form-label">
+              <span>Outer Circle Font Size</span>
+              <span class="val-badge" id="val-outer-font">15.5px</span>
+            </label>
+            <div class="slider-row">
+              <input type="range" id="slider-outer-font" min="9" max="26" step="0.5" value="15.5" />
+            </div>
+          </div>
+
+          <!-- Letter Spacing Slider (Fixes uneven gaps) -->
+          <div class="form-group" id="letter-spacing-group">
+            <label class="form-label">
+              <span>Letter Spacing (Kerning)</span>
+              <span class="val-badge" id="val-letter-spacing">0.5px</span>
+            </label>
+            <div class="slider-row">
+              <input type="range" id="slider-letter-spacing" min="-1.0" max="6.0" step="0.25" value="0.5" />
+            </div>
+          </div>
+
+          <!-- Center Content Font Size Slider -->
+          <div class="form-group" id="center-font-group">
+            <label class="form-label">
+              <span id="center-font-label">Center Text Font Size</span>
+              <span class="val-badge" id="val-center-font">13.0px</span>
+            </label>
+            <div class="slider-row">
+              <input type="range" id="slider-center-font" min="8" max="28" step="0.5" value="13.0" />
+            </div>
+          </div>
+
+          <!-- Line Spacing Slider -->
+          <div class="form-group">
+            <label class="form-label">
+              <span>Line Spacing</span>
+              <span class="val-badge" id="val-line-spacing">1.35x</span>
+            </label>
+            <div class="slider-row">
+              <input type="range" id="slider-line-spacing" min="1.0" max="2.4" step="0.05" value="1.35" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Text Inputs (Swapped based on shape) -->
+        <div class="dynamic-fields" id="dynamic-fields">
+          <!-- Injected via JavaScript based on shape -->
+        </div>
+
+        <!-- Optional Logo Upload -->
+        <div class="form-group">
+          <label class="form-label">Center Logo / Emblem <span class="hint">Optional</span></label>
+          <input type="file" id="logo-file-input" accept="image/*" />
+          <button class="btn" id="clear-logo-btn" style="display: none; margin-top: 4px; padding: 4px 8px; font-size: 11px;">Remove Logo</button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="studio-actions">
+          <button class="btn btn-success" id="stamp-now-btn" style="padding: 10px; font-size: 14px; justify-content: center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+            </svg>
+            Stamp onto A3 Sheet
+          </button>
+
+          <div class="stamp-buttons-row">
+            <button class="btn" id="download-svg-btn" title="Download transparent vector SVG">
+              Download SVG
+            </button>
+            <button class="btn" id="download-png-btn" title="Download 300 DPI transparent PNG">
+              Download PNG
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Scrollable Canvas Viewport -->
+    <main class="canvas-viewport" id="canvas-viewport">
+      <!-- Scaler wrapper dynamically resized by ResizeObserver -->
+      <div class="paper-scaler" id="paper-scaler">
+        <!-- 96 DPI A3 Paper Sheet (1123px x 1587px) -->
+        <article class="paper-a3" id="paper-a3">
+          <div class="doc-page">
+            
+            <!-- Document Header -->
+            <header class="doc-header">
+              <div>
+                <h1 contenteditable="true" spellcheck="false">Certificate of Attestation</h1>
+                <p style="font-family: -apple-system, sans-serif; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em;">
+                  Official Clearance & Compliance Documentation
+                </p>
+              </div>
+              <div class="doc-meta">
+                <div><strong>DOC REF:</strong> A3-STAMP-2026/894</div>
+                <div id="doc-date-display"><strong>DATE:</strong> 25 NOV 2026</div>
+                <div><strong>STATUS:</strong> VERIFIED</div>
+              </div>
+            </header>
+
+            <!-- Document Body Content (Editable) -->
+            <div class="doc-body" id="doc-body" contenteditable="true" spellcheck="false">
+TO WHOMSOEVER IT MAY CONCERN,
+
+This document certifies that the commercial records, specifications, and regulatory clearance mandates detailed in Schedule A attached hereto have been reviewed, verified, and officially authenticated in accordance with the statutory provisions of the designated authority.
+
+1. SCOPE OF CLEARANCE
+The authorized entity has satisfied all preliminary vetting protocols, documentation compliances, and physical site verification inspections. No outstanding statutory notices or non-compliance records are pending as of the effective date of this instrument.
+
+2. VERIFICATION & VALIDATION
+All endorsements affixed herein shall remain valid for a period of twelve (12) calendar months from the date of issuance, subject to periodic compliance audits and random quality assurance verifications.
+
+3. LEGAL ENDORSEMENT
+The authorized stamp and seal affixed below confirms formal registry accession. Any alteration, unauthorized facsimile reproduction, or tampering shall render this certificate null and void.
+            </div>
+
+            <!-- Document Footer & Seal Placement Area -->
+            <footer class="doc-footer">
+              <div class="signatory-box">
+                <div class="signatory-line"></div>
+                <div><strong>AUTHORIZED SIGNATURE</strong></div>
+                <div style="font-size: 10pt; color: #64748b;">Controller of Certification Services</div>
+                <div style="font-size: 9pt; color: #94a3b8;">Department of Statutory Compliance</div>
+              </div>
+
+              <!-- Seal Placement Target Area -->
+              <div class="doc-seal-zone" id="doc-seal-zone" title="Click 'Stamp onto A3 Sheet' or click here to affix seal">
+                <div class="seal-zone-placeholder" id="seal-zone-placeholder">
+                  [ Affix Official Seal Here ]<br/>
+                  <span style="font-size: 10px; opacity: 0.8;">Click 'Stamp onto A3 Sheet'</span>
+                </div>
+                <!-- Container holding the stamped SVG on the paper -->
+                <div class="placed-seal-container" id="placed-seal-container"></div>
+              </div>
+            </footer>
+
+          </div>
+        </article>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Realtime Scale Chip -->
+  <div class="scale-indicator" id="scale-indicator">A3 Scale: 100%</div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // Font Family Map
+      const FONT_MAP = {
+        'kannada-sans': "'Noto Sans Kannada', system-ui, -apple-system, sans-serif",
+        'kannada-serif': "'Kannada Sangam MN', 'Nirmala UI', serif",
+        'english-sans': "Arial, Helvetica, sans-serif",
+        'english-serif': "'Times New Roman', Georgia, serif"
+      };
+
+      // Offscreen canvas for accurate typographic glyph advance measurement
+      const measureCanvas = document.createElement('canvas');
+      const measureCtx = measureCanvas.getContext('2d');
+
+      // 1. Data Specifications & Size Configurations
+      const SIZE_PRESETS = {
+        round: [
+          { id: 'sm', label: 'Small - 32mm (~120px)', mm: 32, px: 120 },
+          { id: 'md', label: 'Standard - 42mm (~160px)', mm: 42, px: 160, default: true },
+          { id: 'lg', label: 'Large - 50mm (~190px)', mm: 50, px: 190 },
+          { id: 'xl', label: 'Extra Large - 60mm (~225px)', mm: 60, px: 225 }
+        ],
+        rectangle: [
+          { id: 'sm', label: 'Small - 40×20mm (~150×75px)', width: 150, height: 75 },
+          { id: 'md', label: 'Standard - 55×25mm (~210×95px)', width: 210, height: 95, default: true },
+          { id: 'lg', label: 'Large - 70×35mm (~265×130px)', width: 265, height: 130 },
+          { id: 'xl', label: 'Extra Large - 85×45mm (~320×170px)', width: 320, height: 170 }
+        ]
+      };
+
+      // State Object with Natural Kerning & Single Star Support
+      const state = {
+        shape: 'round',
+        sizeKey: 'md',
+        theme: 'white-on-black',
+        backing: 'square',
+        border: 'single',
+        fontFamilyKey: 'kannada-sans',
+        bottomStar: '*',       // Single star centered at 6 o'clock
+        outerFontSize: 15.5,
+        letterSpacing: 0.5,    // Natural tight kerning
+        centerFontSize: 13.0,
+        lineSpacing: 1.35,
+        logoDataUrl: null,
+        // Round Values
+        round: {
+          circularText: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ',
+          centerMulti: 'ತಾ||\nಹೊನ್ನಾವರ (ಉ.ಕ.)\nReg. No.\nAR/20/CRSR/\n41614/2018-19'
+        },
+        // Rectangle Values
+        rectangle: {
+          multiText: 'ATTESTED\n\nPRINCIPAL\nM.P.E. Society\'s S.D.M. College\nHONAVAR - 581334 U.Kannada',
+          hasHeaderDivider: true,
+          fontSize: 13.0,
+          lineSpacing: 1.35
+        }
+      };
+
+      // Real-World Templates matching user photos
+      const SAMPLE_TEMPLATES = {
+        'honavar-coop': {
+          shape: 'round',
+          sizeKey: 'md',
+          theme: 'white-on-black',
+          backing: 'square',
+          border: 'single',
+          fontFamilyKey: 'kannada-sans',
+          bottomStar: '*',
+          outerFontSize: 15.5,
+          letterSpacing: 0.5,
+          centerFontSize: 13.0,
+          lineSpacing: 1.35,
+          round: {
+            circularText: 'ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ',
+            centerMulti: 'ತಾ||\nಹೊನ್ನಾವರ (ಉ.ಕ.)\nReg. No.\nAR/20/CRSR/\n41614/2018-19'
+          }
+        },
+        'college-attested': {
+          shape: 'rectangle',
+          sizeKey: 'lg',
+          theme: 'black-on-white',
+          border: 'single',
+          fontFamilyKey: 'english-sans',
+          rectangle: {
+            multiText: 'ATTESTED\n\nPRINCIPAL\nM.P.E. Society\'s S.D.M. College\nHONAVAR - 581334 U.Kannada',
+            hasHeaderDivider: true,
+            fontSize: 13.5,
+            lineSpacing: 1.4
+          }
+        },
+        'canara-jeeni': {
+          shape: 'rectangle',
+          sizeKey: 'xl',
+          theme: 'white-on-black',
+          border: 'single',
+          fontFamilyKey: 'kannada-sans',
+          rectangle: {
+            multiText: 'ಮುಖ್ಯ ಕಾರ್ಯನಿರ್ವಾಹಕರು\nವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ\nತಾ|| ಹೊನ್ನಾವರ (ಉ.ಕ.)\nCANARA JEENI HEALTH MIX\nProprietor',
+            hasHeaderDivider: false,
+            fontSize: 12.0,
+            lineSpacing: 1.35
+          }
+        },
+        'gold-appraiser': {
+          shape: 'rectangle',
+          sizeKey: 'sm',
+          theme: 'black-on-white',
+          border: 'single',
+          fontFamilyKey: 'english-sans',
+          rectangle: {
+            multiText: 'Ganesh P. Shet\nGold Appraiser\nHonavar',
+            hasHeaderDivider: false,
+            fontSize: 14.0,
+            lineSpacing: 1.4
+          }
+        }
+      };
+
+      // DOM Elements
+      const sampleSelect = document.getElementById('sample-select');
+      const studioSidebar = document.getElementById('studio-sidebar');
+      const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
+      const stampStage = document.getElementById('stamp-stage');
+      const stampDimLabel = document.getElementById('stamp-dim-label');
+      const sealShapeSelect = document.getElementById('seal-shape');
+      const sealSizeSelect = document.getElementById('seal-size');
+      const sealBorderSelect = document.getElementById('seal-border');
+      const sealBackingSelect = document.getElementById('seal-backing');
+      const backingGroup = document.getElementById('backing-group');
+      const themeControls = document.getElementById('theme-controls');
+      const dynamicFieldsContainer = document.getElementById('dynamic-fields');
+      const logoFileInput = document.getElementById('logo-file-input');
+      const clearLogoBtn = document.getElementById('clear-logo-btn');
+      const stampNowBtn = document.getElementById('stamp-now-btn');
+      const downloadSvgBtn = document.getElementById('download-svg-btn');
+      const downloadPngBtn = document.getElementById('download-png-btn');
+      const printA3Btn = document.getElementById('print-a3-btn');
+      const resetDocBtn = document.getElementById('reset-doc-btn');
+      const canvasViewport = document.getElementById('canvas-viewport');
+      const paperScaler = document.getElementById('paper-scaler');
+      const paperA3 = document.getElementById('paper-a3');
+      const docSealZone = document.getElementById('doc-seal-zone');
+      const sealZonePlaceholder = document.getElementById('seal-zone-placeholder');
+      const placedSealContainer = document.getElementById('placed-seal-container');
+      const scaleIndicator = document.getElementById('scale-indicator');
+      const docBody = document.getElementById('doc-body');
+
+      // Typography Controls DOM
+      const selectFontFamily = document.getElementById('select-font-family');
+      const bottomStarGroup = document.getElementById('bottom-star-group');
+      const selectBottomStar = document.getElementById('select-bottom-star');
+      const outerFontGroup = document.getElementById('outer-font-group');
+      const letterSpacingGroup = document.getElementById('letter-spacing-group');
+      const sliderLetterSpacing = document.getElementById('slider-letter-spacing');
+      const valLetterSpacing = document.getElementById('val-letter-spacing');
+      const centerFontGroup = document.getElementById('center-font-group');
+      const centerFontLabel = document.getElementById('center-font-label');
+      const sliderOuterFont = document.getElementById('slider-outer-font');
+      const valOuterFont = document.getElementById('val-outer-font');
+      const sliderCenterFont = document.getElementById('slider-center-font');
+      const valCenterFont = document.getElementById('val-center-font');
+      const sliderLineSpacing = document.getElementById('slider-line-spacing');
+      const valLineSpacing = document.getElementById('val-line-spacing');
+      const btnAutoFit = document.getElementById('btn-auto-fit');
+
+      // Indic Syllable Tokenizer Regex
+      const INDIC_SYLLABLE_REGEX = /[\u0C95-\u0CB9\u0CDE](?:\u0CCD[\u0C95-\u0CB9\u0CDE])*(?:[\u0CBE-\u0CCC\u0CD5\u0CD6\u0C82\u0C83])?|[^\s]|\s+/gu;
+
+      function tokenizeIndicString(str) {
+        if (!str) return [];
+        const matches = str.match(INDIC_SYLLABLE_REGEX);
+        return matches || [];
+      }
+
+      // Measures exact typographic advance in pixels for any token (syllable, word space, punctuation)
+      function getTokenAdvance(token, fontSize, fontFamily) {
+        measureCtx.font = `700 ${fontSize}px ${fontFamily}`;
+        if (token === ' ') {
+          return Math.max(5, measureCtx.measureText(' ').width);
+        }
+        return Math.max(4, measureCtx.measureText(token).width);
+      }
+
+      // 2. Responsive Scaling Engine (ResizeObserver for A3 1123px width)
+      const A3_WIDTH = 1123;
+      const A3_HEIGHT = 1587;
+
+      function updateA3Scaling() {
+        const availableWidth = canvasViewport.clientWidth - 40;
+        const scale = Math.min(1, Math.max(0.1, availableWidth / A3_WIDTH));
+
+        paperA3.style.transformOrigin = 'top center';
+        paperA3.style.transform = 'scale(' + scale + ')';
+
+        paperScaler.style.width = Math.round(A3_WIDTH * scale) + 'px';
+        paperScaler.style.height = Math.round(A3_HEIGHT * scale) + 'px';
+
+        scaleIndicator.textContent = 'A3 Scale: ' + Math.round(scale * 100) + '%';
+      }
+
+      const resizeObserver = new ResizeObserver(() => updateA3Scaling());
+      resizeObserver.observe(canvasViewport);
+
+      // 3. UI Builders for Dynamic Inputs
+      function populateSizeOptions() {
+        sealSizeSelect.innerHTML = '';
+        const presets = SIZE_PRESETS[state.shape];
+        presets.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.label;
+          if (p.id === state.sizeKey) opt.selected = true;
+          sealSizeSelect.appendChild(opt);
+        });
+      }
+
+      function buildDynamicFields() {
+        dynamicFieldsContainer.innerHTML = '';
+
+        if (state.shape === 'round') {
+          bottomStarGroup.style.display = 'flex';
+          outerFontGroup.style.display = 'flex';
+          letterSpacingGroup.style.display = 'flex';
+          centerFontLabel.textContent = 'Center Text Font Size';
+
+          dynamicFieldsContainer.innerHTML = `
+            <div class="form-group">
+              <label class="form-label">Circular Outer Text <span class="hint">Natural Kerning</span></label>
+              <input type="text" id="input-circular-text" value="${escapeHtml(state.round.circularText)}" placeholder="e.g. ವಿವಿಧೋದ್ದೇಶ ಪ್ರಾಥಮಿಕ ಗ್ರಾಮೀಣ ಕೃಷಿ ಸಹಕಾರಿ ಸಂಘ ನಿ. ಉಪ್ಪೋಣಿ" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Center Content (Multi-Line) <span class="hint">Press Enter for new line</span></label>
+              <textarea id="input-round-center" rows="5" placeholder="Line 1\nLine 2\nLine 3...">${escapeHtml(state.round.centerMulti)}</textarea>
+            </div>
+          `;
+
+          document.getElementById('input-circular-text').addEventListener('input', e => { 
+            state.round.circularText = e.target.value; 
+            markCustomSample();
+            renderAll(); 
+          });
+
+          document.getElementById('input-round-center').addEventListener('input', e => { 
+            state.round.centerMulti = e.target.value; 
+            markCustomSample();
+            renderAll(); 
+          });
+
+        } else {
+          bottomStarGroup.style.display = 'none';
+          outerFontGroup.style.display = 'none';
+          letterSpacingGroup.style.display = 'none';
+          centerFontLabel.textContent = 'Rectangle Text Font Size';
+
+          dynamicFieldsContainer.innerHTML = `
+            <div class="form-group">
+              <label class="form-label">Rectangle Content (Multi-Line) <span class="hint">Press Enter for new line</span></label>
+              <textarea id="input-rect-multi" rows="6" placeholder="Line 1 (e.g. ATTESTED)\nLine 2 (e.g. PRINCIPAL)\nLine 3...">${escapeHtml(state.rectangle.multiText)}</textarea>
+            </div>
+            <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between;">
+              <label for="check-rect-divider" style="font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer;">
+                Add Divider Line Under 1st Line
+              </label>
+              <input type="checkbox" id="check-rect-divider" style="width: auto; cursor: pointer;" ${state.rectangle.hasHeaderDivider ? 'checked' : ''} />
+            </div>
+          `;
+
+          document.getElementById('input-rect-multi').addEventListener('input', e => { 
+            state.rectangle.multiText = e.target.value; 
+            markCustomSample();
+            renderAll(); 
+          });
+          document.getElementById('check-rect-divider').addEventListener('change', e => {
+            state.rectangle.hasHeaderDivider = e.target.checked;
+            markCustomSample();
+            renderAll();
+          });
+        }
+      }
+
+      function markCustomSample() {
+        if (sampleSelect.value !== 'custom') {
+          sampleSelect.value = 'custom';
+        }
+      }
+
+      function escapeHtml(str) {
+        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      // Reset Defaults button handler
+      function resetDefaults() {
+        if (state.shape === 'round') {
+          state.outerFontSize = 15.5;
+          state.letterSpacing = 0.5;
+          state.centerFontSize = 13.0;
+          state.lineSpacing = 1.35;
+          state.bottomStar = '*';
+
+          sliderOuterFont.value = state.outerFontSize;
+          valOuterFont.textContent = state.outerFontSize.toFixed(1) + 'px';
+          sliderLetterSpacing.value = state.letterSpacing;
+          valLetterSpacing.textContent = state.letterSpacing.toFixed(2) + 'px';
+          sliderCenterFont.value = state.centerFontSize;
+          valCenterFont.textContent = state.centerFontSize.toFixed(1) + 'px';
+          sliderLineSpacing.value = state.lineSpacing;
+          valLineSpacing.textContent = state.lineSpacing.toFixed(2) + 'x';
+          selectBottomStar.value = '*';
+        } else {
+          state.rectangle.fontSize = 13.0;
+          state.rectangle.lineSpacing = 1.35;
+
+          sliderCenterFont.value = state.rectangle.fontSize;
+          valCenterFont.textContent = state.rectangle.fontSize.toFixed(1) + 'px';
+          sliderLineSpacing.value = state.rectangle.lineSpacing;
+          valLineSpacing.textContent = state.rectangle.lineSpacing.toFixed(2) + 'x';
+        }
+        renderAll();
+      }
+
+      btnAutoFit.addEventListener('click', resetDefaults);
+
+      // 4. Mathematical SVG Seal Generator (Natural Kerning + Single Bottom Star)
+      function generateSealSVG(targetWidth, targetHeight) {
+        const isWhiteOnBlack = state.theme === 'white-on-black';
+        const inkColor = isWhiteOnBlack ? '#ffffff' : '#000000';
+        const borderStyle = state.border;
+        const fontFamily = FONT_MAP[state.fontFamilyKey] || FONT_MAP['kannada-sans'];
+
+        if (state.shape === 'round') {
+          // Circular Seal in canonical 300x300 viewBox
+          const cx = 150;
+          const cy = 150;
+          const outerR = 142;
+          const innerR = 98;
+          const bandR = 120; // Center radius of outer text channel (between 98 and 142)
+
+          // Background Base Fill
+          let baseFillMarkup = '';
+          if (isWhiteOnBlack) {
+            if (state.backing === 'square') {
+              baseFillMarkup = `<rect x="4" y="4" width="292" height="292" rx="4" fill="#000000" />`;
+            } else {
+              baseFillMarkup = `<circle cx="${cx}" cy="${cy}" r="${outerR}" fill="#000000" />`;
+            }
+          }
+
+          // Border markup
+          let borderMarkup = '';
+          if (borderStyle === 'double') {
+            borderMarkup = `
+              <circle cx="${cx}" cy="${cy}" r="${outerR}" fill="none" stroke="${inkColor}" stroke-width="4" />
+              <circle cx="${cx}" cy="${cy}" r="${outerR - 5}" fill="none" stroke="${inkColor}" stroke-width="1.5" />
+              <circle cx="${cx}" cy="${cy}" r="${innerR}" fill="none" stroke="${inkColor}" stroke-width="2" />
+              <circle cx="${cx}" cy="${cy}" r="${innerR - 4}" fill="none" stroke="${inkColor}" stroke-width="1" />
+            `;
+          } else if (borderStyle === 'dotted') {
+            borderMarkup = `
+              <circle cx="${cx}" cy="${cy}" r="${outerR}" fill="none" stroke="${inkColor}" stroke-width="4" />
+              <circle cx="${cx}" cy="${cy}" r="${innerR}" fill="none" stroke="${inkColor}" stroke-width="2" stroke-dasharray="3 3" />
+            `;
+          } else {
+            // Clean single border as in real-world Honavar photo
+            borderMarkup = `
+              <circle cx="${cx}" cy="${cy}" r="${outerR}" fill="none" stroke="${inkColor}" stroke-width="4.5" />
+              <circle cx="${cx}" cy="${cy}" r="${innerR}" fill="none" stroke="${inkColor}" stroke-width="2" />
+            `;
+          }
+
+          // 1. Single Bottom Star Placement (Exact 6 o'clock Center: x=150, y=150+120=270)
+          let bottomStarMarkup = '';
+          if (state.bottomStar && state.bottomStar !== 'none') {
+            const starFontSize = Math.max(16, state.outerFontSize + 2);
+            bottomStarMarkup = `
+              <text 
+                x="${cx}" 
+                y="${cy + bandR}" 
+                fill="${inkColor}" 
+                font-family="${fontFamily}" 
+                font-size="${starFontSize}" 
+                font-weight="800" 
+                text-anchor="middle" 
+                dominant-baseline="central"
+              >${state.bottomStar}</text>
+            `;
+          }
+
+          // 2. Natural Kerning Circular Text Engine
+          // Tokenize string into indivisible orthographic syllables
+          const cleanText = (state.round.circularText || '').trim();
+          const tokens = tokenizeIndicString(cleanText);
+
+          let circularTextMarkup = '';
+          if (tokens.length > 0) {
+            // Measure actual pixel width of each syllable + user letter-spacing
+            const tokenAdvances = tokens.map(t => {
+              const naturalWidth = getTokenAdvance(t, state.outerFontSize, fontFamily);
+              return naturalWidth + state.letterSpacing;
+            });
+
+            const totalTextWidth = tokenAdvances.reduce((a, b) => a + b, 0);
+
+            // Compute total angular span along the circle
+            // Angle in degrees = (width / radius) * (180 / PI)
+            let totalAngleSpan = (totalTextWidth / bandR) * (180 / Math.PI);
+
+            // Maximum allowed span so text doesn't collide with the bottom star at 180°
+            const maxSpan = state.bottomStar !== 'none' ? 336 : 352;
+            let scaleFactor = 1.0;
+            if (totalAngleSpan > maxSpan) {
+              scaleFactor = maxSpan / totalAngleSpan;
+              totalAngleSpan = maxSpan;
+            }
+
+            // Symmetrically center text across 12 o'clock apex (0°)
+            // Left end starts at -totalAngleSpan/2, Right end finishes at +totalAngleSpan/2
+            const startAngle = -totalAngleSpan / 2;
+
+            let currentWidthAccum = 0;
+            tokens.forEach((token, idx) => {
+              const advance = tokenAdvances[idx] * scaleFactor;
+              const angle = startAngle + ((currentWidthAccum + advance / 2) / (totalTextWidth * scaleFactor)) * totalAngleSpan;
+              currentWidthAccum += advance;
+
+              if (token.trim().length === 0) return; // space contributes to position without drawing
+
+              circularTextMarkup += `
+                <text 
+                  x="${cx}" 
+                  y="${cy - bandR}" 
+                  transform="rotate(${angle.toFixed(2)}, ${cx}, ${cy})" 
+                  fill="${inkColor}" 
+                  font-family="${fontFamily}" 
+                  font-size="${state.outerFontSize}" 
+                  font-weight="700" 
+                  text-anchor="middle" 
+                  dominant-baseline="central"
+                >${escapeHtml(token)}</text>
+              `;
+            });
+          }
+
+          // 3. Center Multi-Line Calculations with User Sliders
+          const rawLines = (state.round.centerMulti || '').split('\n');
+          const lines = rawLines.map(l => l.trim()).filter(l => l.length > 0);
+          const lineCount = Math.max(1, lines.length);
+
+          const centerFontSize = state.centerFontSize;
+          const lineSpacing = Math.round(centerFontSize * state.lineSpacing);
+
+          // Dynamic vertical centering inside inner circle
+          const totalTextHeight = (lineCount - 1) * lineSpacing;
+          const startY = cy - (totalTextHeight / 2) + Math.round(centerFontSize * 0.35);
+
+          let centerLinesMarkup = '';
+          lines.forEach((lineText, idx) => {
+            const yPos = startY + (idx * lineSpacing);
+            centerLinesMarkup += `
+              <text x="${cx}" y="${yPos}" fill="${inkColor}" font-family="${fontFamily}" font-weight="700" font-size="${centerFontSize}" text-anchor="middle">
+                ${escapeHtml(lineText)}
+              </text>
+            `;
+          });
+
+          // Optional Center Logo if uploaded
+          let logoMarkup = '';
+          if (state.logoDataUrl) {
+            logoMarkup = `
+              <image href="${state.logoDataUrl}" x="120" y="105" width="60" height="50" preserveAspectRatio="xMidYMid meet" opacity="0.85" />
+            `;
+          }
+
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="${targetWidth}" height="${targetHeight}" style="overflow: visible;">
+              ${baseFillMarkup}
+              ${borderMarkup}
+
+              <!-- Circular Text (Naturally Kerned, Zero Dotted Circles) -->
+              <g class="circular-ring-text">
+                ${circularTextMarkup}
+              </g>
+
+              <!-- Single Bottom Star Centered at 6 o'clock -->
+              ${bottomStarMarkup}
+
+              ${logoMarkup}
+
+              <!-- Center Multi-Line Stack -->
+              <g class="center-lines">
+                ${centerLinesMarkup}
+              </g>
+            </svg>
+          `;
+
+        } else {
+          // Rectangular Seal in a 320x160 canonical viewBox
+          const w = 320;
+          const h = 160;
+
+          const rawLines = (state.rectangle.multiText || '').split('\n');
+          const lines = rawLines.map(l => l.trim()).filter(l => l.length > 0);
+          const lineCount = Math.max(1, lines.length);
+
+          const rectFontSize = state.rectangle.fontSize;
+          const lineSpacing = Math.round(rectFontSize * state.rectangle.lineSpacing);
+
+          // Vertical Centering inside Box
+          const totalTextHeight = (lineCount - 1) * lineSpacing;
+          const startY = (h / 2) - (totalTextHeight / 2) + Math.round(rectFontSize * 0.35);
+
+          let baseFillMarkup = '';
+          if (isWhiteOnBlack) {
+            baseFillMarkup = `<rect x="5" y="5" width="${w - 10}" height="${h - 10}" rx="4" fill="#000000" />`;
+          }
+
+          let borderMarkup = '';
+          if (borderStyle === 'double') {
+            borderMarkup = `
+              <rect x="5" y="5" width="${w - 10}" height="${h - 10}" rx="4" fill="none" stroke="${inkColor}" stroke-width="3.5" />
+              <rect x="10" y="10" width="${w - 20}" height="${h - 20}" rx="2" fill="none" stroke="${inkColor}" stroke-width="1.5" />
+            `;
+          } else {
+            borderMarkup = `
+              <rect x="5" y="5" width="${w - 10}" height="${h - 10}" rx="4" fill="none" stroke="${inkColor}" stroke-width="3.5" />
+            `;
+          }
+
+          let linesMarkup = '';
+          let dividerMarkup = '';
+
+          lines.forEach((lineText, idx) => {
+            const yPos = startY + (idx * lineSpacing);
+            const isHeader = (idx === 0 && state.rectangle.hasHeaderDivider);
+            const fontWeight = isHeader ? '800' : '600';
+            const extraSize = isHeader ? 2 : 0;
+
+            linesMarkup += `
+              <text x="${w / 2}" y="${yPos}" fill="${inkColor}" font-family="${fontFamily}" font-weight="${fontWeight}" font-size="${rectFontSize + extraSize}" text-anchor="middle">
+                ${escapeHtml(lineText)}
+              </text>
+            `;
+
+            if (isHeader) {
+              const dividerY = yPos + Math.round(rectFontSize * 0.45);
+              dividerMarkup = `<line x1="20" y1="${dividerY}" x2="${w - 20}" y2="${dividerY}" stroke="${inkColor}" stroke-width="1.2" opacity="0.8" />`;
+            }
+          });
+
+          return `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${targetWidth}" height="${targetHeight}">
+              ${baseFillMarkup}
+              ${borderMarkup}
+              ${dividerMarkup}
+              <g class="rect-lines">
+                ${linesMarkup}
+              </g>
+            </svg>
+          `;
+        }
+      }
+
+      // 5. Render Pipeline
+      function getCurrentTargetDimensions() {
+        const presets = SIZE_PRESETS[state.shape];
+        const selected = presets.find(p => p.id === state.sizeKey) || presets[0];
+        if (state.shape === 'round') {
+          return { width: selected.px, height: selected.px, label: selected.label };
+        } else {
+          return { width: selected.width, height: selected.height, label: selected.label };
+        }
+      }
+
+      function renderAll() {
+        const dim = getCurrentTargetDimensions();
+        stampDimLabel.textContent = dim.label;
+
+        // Show/Hide Backing select for White on Black round seals
+        if (state.shape === 'round' && state.theme === 'white-on-black') {
+          backingGroup.style.display = 'flex';
+        } else {
+          backingGroup.style.display = 'none';
+        }
+
+        // Render in Thumbnail Stage (Sidebar)
+        const previewSvg = generateSealSVG(dim.width, dim.height);
+        stampStage.innerHTML = previewSvg;
+
+        // If seal is placed on A3 paper, update it live
+        if (placedSealContainer.style.display !== 'none') {
+          placedSealContainer.innerHTML = previewSvg;
+        }
+      }
+
+      // 6. Stamping onto A3 Sheet
+      function stampOnA3() {
+        const dim = getCurrentTargetDimensions();
+        const svgContent = generateSealSVG(dim.width, dim.height);
+
+        placedSealContainer.innerHTML = svgContent;
+        placedSealContainer.style.display = 'block';
+        sealZonePlaceholder.style.display = 'none';
+
+        placedSealContainer.animate([
+          { transform: 'scale(1.22)', opacity: 0.5 },
+          { transform: 'scale(1)', opacity: 1 }
+        ], {
+          duration: 180,
+          easing: 'ease-out'
+        });
+
+        if (window.innerWidth <= 880) {
+          studioSidebar.classList.add('collapsed');
+        }
+      }
+
+      // 7. Load Template Preset Handler
+      function applyTemplate(templateKey) {
+        const tpl = SAMPLE_TEMPLATES[templateKey];
+        if (!tpl) return;
+
+        state.shape = tpl.shape;
+        sealShapeSelect.value = tpl.shape;
+
+        state.sizeKey = tpl.sizeKey;
+        populateSizeOptions();
+        sealSizeSelect.value = tpl.sizeKey;
+
+        state.theme = tpl.theme;
+        document.querySelectorAll('.theme-option-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-theme') === tpl.theme);
+        });
+
+        if (tpl.backing) {
+          state.backing = tpl.backing;
+          sealBackingSelect.value = tpl.backing;
+        }
+
+        if (tpl.border) {
+          state.border = tpl.border;
+          sealBorderSelect.value = tpl.border;
+        }
+
+        if (tpl.fontFamilyKey) {
+          state.fontFamilyKey = tpl.fontFamilyKey;
+          selectFontFamily.value = tpl.fontFamilyKey;
+        }
+
+        if (tpl.shape === 'round') {
+          state.bottomStar = tpl.bottomStar || '*';
+          selectBottomStar.value = state.bottomStar;
+
+          state.outerFontSize = tpl.outerFontSize;
+          state.letterSpacing = tpl.letterSpacing || 0.5;
+          state.centerFontSize = tpl.centerFontSize;
+          state.lineSpacing = tpl.lineSpacing;
+
+          sliderOuterFont.value = tpl.outerFontSize;
+          valOuterFont.textContent = tpl.outerFontSize.toFixed(1) + 'px';
+          sliderLetterSpacing.value = state.letterSpacing;
+          valLetterSpacing.textContent = state.letterSpacing.toFixed(2) + 'px';
+          sliderCenterFont.value = tpl.centerFontSize;
+          valCenterFont.textContent = tpl.centerFontSize.toFixed(1) + 'px';
+          sliderLineSpacing.value = tpl.lineSpacing;
+          valLineSpacing.textContent = tpl.lineSpacing.toFixed(2) + 'x';
+
+          if (tpl.round) {
+            state.round.circularText = tpl.round.circularText;
+            state.round.centerMulti = tpl.round.centerMulti;
+          }
+        } else {
+          state.rectangle.fontSize = tpl.rectangle.fontSize;
+          state.rectangle.lineSpacing = tpl.rectangle.lineSpacing;
+
+          sliderCenterFont.value = tpl.rectangle.fontSize;
+          valCenterFont.textContent = tpl.rectangle.fontSize.toFixed(1) + 'px';
+          sliderLineSpacing.value = tpl.rectangle.lineSpacing;
+          valLineSpacing.textContent = tpl.rectangle.lineSpacing.toFixed(2) + 'x';
+
+          if (tpl.rectangle) {
+            state.rectangle.multiText = tpl.rectangle.multiText;
+            state.rectangle.hasHeaderDivider = tpl.rectangle.hasHeaderDivider;
+          }
+        }
+
+        buildDynamicFields();
+        renderAll();
+      }
+
+      sampleSelect.addEventListener('change', e => {
+        if (e.target.value !== 'custom') {
+          applyTemplate(e.target.value);
+        }
+      });
+
+      // 8. Download Handlers
+      downloadSvgBtn.addEventListener('click', () => {
+        const dim = getCurrentTargetDimensions();
+        const svgString = generateSealSVG(dim.width, dim.height);
+        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `stamp-seal-${state.shape}-${state.theme}.svg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // Supersampled 4x 300 DPI High-Res Transparent PNG
+      downloadPngBtn.addEventListener('click', () => {
+        const dim = getCurrentTargetDimensions();
+        const svgString = generateSealSVG(dim.width, dim.height);
+        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        const img = new Image();
+        img.onload = function () {
+          const scaleMultiplier = 4; // 4x supersampling for razor-sharp 300 DPI
+          const canvas = document.createElement('canvas');
+          canvas.width = dim.width * scaleMultiplier;
+          canvas.height = dim.height * scaleMultiplier;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob(pngBlob => {
+            const pngUrl = URL.createObjectURL(pngBlob);
+            const a = document.createElement('a');
+            a.href = pngUrl;
+            a.download = `stamp-seal-${state.shape}-${state.theme}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(pngUrl);
+            URL.revokeObjectURL(url);
+          }, 'image/png');
+        };
+        img.src = url;
+      });
+
+      // 9. Event Listeners & Controls
+      sealShapeSelect.addEventListener('change', e => {
+        state.shape = e.target.value;
+        state.sizeKey = 'md';
+        populateSizeOptions();
+        buildDynamicFields();
+        markCustomSample();
+        renderAll();
+      });
+
+      sealSizeSelect.addEventListener('change', e => {
+        state.sizeKey = e.target.value;
+        markCustomSample();
+        renderAll();
+      });
+
+      sealBorderSelect.addEventListener('change', e => {
+        state.border = e.target.value;
+        markCustomSample();
+        renderAll();
+      });
+
+      sealBackingSelect.addEventListener('change', e => {
+        state.backing = e.target.value;
+        markCustomSample();
+        renderAll();
+      });
+
+      // Bottom Star selector
+      selectBottomStar.addEventListener('change', e => {
+        state.bottomStar = e.target.value;
+        markCustomSample();
+        renderAll();
+      });
+
+      // Font Family select
+      selectFontFamily.addEventListener('change', e => {
+        state.fontFamilyKey = e.target.value;
+        markCustomSample();
+        renderAll();
+      });
+
+      // Typography Sliders
+      sliderOuterFont.addEventListener('input', e => {
+        const val = parseFloat(e.target.value);
+        state.outerFontSize = val;
+        valOuterFont.textContent = val.toFixed(1) + 'px';
+        markCustomSample();
+        renderAll();
+      });
+
+      sliderLetterSpacing.addEventListener('input', e => {
+        const val = parseFloat(e.target.value);
+        state.letterSpacing = val;
+        valLetterSpacing.textContent = val.toFixed(2) + 'px';
+        markCustomSample();
+        renderAll();
+      });
+
+      sliderCenterFont.addEventListener('input', e => {
+        const val = parseFloat(e.target.value);
+        if (state.shape === 'round') {
+          state.centerFontSize = val;
+        } else {
+          state.rectangle.fontSize = val;
+        }
+        valCenterFont.textContent = val.toFixed(1) + 'px';
+        markCustomSample();
+        renderAll();
+      });
+
+      sliderLineSpacing.addEventListener('input', e => {
+        const val = parseFloat(e.target.value);
+        if (state.shape === 'round') {
+          state.lineSpacing = val;
+        } else {
+          state.rectangle.lineSpacing = val;
+        }
+        valLineSpacing.textContent = val.toFixed(2) + 'x';
+        markCustomSample();
+        renderAll();
+      });
+
+      // Binary Theme Toggle (Black on White vs White on Black)
+      themeControls.addEventListener('click', e => {
+        const btn = e.target.closest('.theme-option-btn');
+        if (!btn) return;
+        document.querySelectorAll('.theme-option-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.theme = btn.getAttribute('data-theme');
+        markCustomSample();
+        renderAll();
+      });
+
+      // Logo File Upload
+      logoFileInput.addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          state.logoDataUrl = ev.target.result;
+          clearLogoBtn.style.display = 'inline-flex';
+          renderAll();
+        };
+        reader.readAsDataURL(file);
+      });
+
+      clearLogoBtn.addEventListener('click', () => {
+        state.logoDataUrl = null;
+        logoFileInput.value = '';
+        clearLogoBtn.style.display = 'none';
+        renderAll();
+      });
+
+      // Affix Stamp Button
+      stampNowBtn.addEventListener('click', stampOnA3);
+      docSealZone.addEventListener('click', stampOnA3);
+
+      // Print A3 Button
+      printA3Btn.addEventListener('click', () => {
+        window.print();
+      });
+
+      // Reset Document Template
+      resetDocBtn.addEventListener('click', () => {
+        if (confirm('Reset document text to default template?')) {
+          docBody.innerHTML = `
+TO WHOMSOEVER IT MAY CONCERN,
+
+This document certifies that the commercial records, specifications, and regulatory clearance mandates detailed in Schedule A attached hereto have been reviewed, verified, and officially authenticated in accordance with the statutory provisions of the designated authority.
+
+1. SCOPE OF CLEARANCE
+The authorized entity has satisfied all preliminary vetting protocols, documentation compliances, and physical site verification inspections. No outstanding statutory notices or non-compliance records are pending as of the effective date of this instrument.
+
+2. VERIFICATION & VALIDATION
+All endorsements affixed herein shall remain valid for a period of twelve (12) calendar months from the date of issuance, subject to periodic compliance audits and random quality assurance verifications.
+
+3. LEGAL ENDORSEMENT
+The authorized stamp and seal affixed below confirms formal registry accession. Any alteration, unauthorized facsimile reproduction, or tampering shall render this certificate null and void.`;
+        }
+      });
+
+      // Mobile Drawer Toggle
+      toggleSidebarBtn.addEventListener('click', () => {
+        studioSidebar.classList.toggle('collapsed');
+      });
+
+      // Clipboard sanitization on document contenteditable
+      docBody.addEventListener('paste', e => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+          document.execCommand('insertText', false, text);
+        } else {
+          const selection = window.getSelection();
+          if (!selection.rangeCount) return;
+          selection.deleteFromDocument();
+          selection.getRangeAt(0).insertNode(document.createTextNode(text));
+          selection.collapseToEnd();
+        }
+      });
+
+      // Auto update current date
+      const today = new Date();
+      const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      const formattedDate = `${today.getDate()} ${monthNames[today.getMonth()]} ${today.getFullYear()}`;
+      const docDateDisplay = document.getElementById('doc-date-display');
+      if (docDateDisplay) docDateDisplay.innerHTML = `<strong>DATE:</strong> ${formattedDate}`;
+
+      // Initialization
+      populateSizeOptions();
+      buildDynamicFields();
+      renderAll();
+      updateA3Scaling();
+    })();
+  </script>
+</body>
+</html>
